@@ -2,6 +2,7 @@ package lib
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -39,6 +40,7 @@ func QueryRow(db *sql.DB, sql SelectSQL, obj interface{}) error {
 	return nil
 }
 
+// Query only allowed string field
 func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
 
 	mapping, err := tagCheck(sql.Select, obj)
@@ -91,8 +93,16 @@ func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
 		vindex.Set(vi)
 		idx++
 	}
-
 	return nil
+}
+
+func Exec(db *sql.DB, sql SQLStatement) (sql.Result, error) {
+	fmt.Println("Exec was called")
+	rawSQL, err := sql.MakeSQL()
+	if err != nil {
+		return nil, err
+	}
+	return db.Exec(rawSQL)
 }
 
 func tagCheck(columns []string, obj interface{}) ([]int, error) {
