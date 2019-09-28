@@ -2,38 +2,43 @@ package lib
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// SelectRow only allowed string field
-func SelectRow(db *sql.DB, sql SelectSQL, obj interface{}) error {
-
+// QueryRow only allowed string field
+func QueryRow(db *sql.DB, sql SelectSQL, obj interface{}) error {
 	mapping, err := tagCheck(sql.Select, obj)
 	if err != nil {
 		return err
 	}
-
 	rawSQL, err := sql.MakeSQL()
 	if err != nil {
 		return err
 	}
 
-	// TODO 可変長の引数をいい感じに渡したい
-	columns := []string{}
+	columns := make([]interface{}, len(sql.Select))
 	for i := 0; i < len(sql.Select); i++ {
-		str := ""
-		columns = append(columns, str)
+		var str string
+		columns[i] = &str
 	}
-	err = db.QueryRow(rawSQL).Scan(&columns[0], &columns[1])
-	// TODO END 可変長の引数をいい感じに渡したい
+	err = db.QueryRow(rawSQL).Scan(columns...)
+	if err != nil {
+		return err
+	}
 
 	v := reflect.Indirect(reflect.ValueOf(obj))
 
-	for i, str := range columns {
+	for i, column := range columns {
 		subv := v.Field(mapping[i])
-		subv.SetString(str)
+		str, _ := column.(*string)
+		subv.SetString(*str)
+	}
+
+	return nil
+}
 	}
 
 	return nil
