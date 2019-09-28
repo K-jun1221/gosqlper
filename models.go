@@ -10,9 +10,9 @@ type SelectSQL struct {
 	Where  string
 }
 
-func (s *SelectSQL) makeSQL() (string, error) {
+func (s *SelectSQL) MakeSQL() (string, error) {
 	if s.Select == "" || s.From == "" {
-		return "", errors.New("")
+		return "", errors.New("lack required args")
 	}
 
 	sql := "SELECT " + s.Select + " FROM " + s.From
@@ -26,5 +26,4 @@ func (s *SelectSQL) makeSQL() (string, error) {
 	}
 
 	return sql, nil
-
 }
