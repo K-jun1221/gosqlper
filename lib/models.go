@@ -1,21 +1,24 @@
-package gosqlper
+package lib
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // SelectSQL, @required: Select, From @optional: Join, Where
 type SelectSQL struct {
-	Select string
+	Select []string
 	From   string
 	Join   string
 	Where  string
 }
 
 func (s *SelectSQL) MakeSQL() (string, error) {
-	if s.Select == "" || s.From == "" {
+	if len(s.Select) == 0 || s.From == "" {
 		return "", errors.New("lack required args")
 	}
 
-	sql := "SELECT " + s.Select + " FROM " + s.From
+	sql := "SELECT " + strings.Join(s.Select, ", ") + " FROM " + s.From
 
 	if s.Join != "" {
 		sql += " JOIN " + s.Join
