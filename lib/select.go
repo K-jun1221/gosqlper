@@ -2,7 +2,6 @@ package lib
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -51,13 +50,14 @@ func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
 		return err
 	}
 
-	fmt.Println("mapping: ", mapping)
-	fmt.Println("rawSQL: ", rawSQL)
-
+	v := reflect.Indirect(reflect.ValueOf(objs))
 	rows, err := db.Query(rawSQL)
 	if err != nil {
 		return err
 	}
+
+	idx := 0
+	vi := reflect.Indirect(reflect.ValueOf(obj))
 
 	for rows.Next() {
 		columns := make([]interface{}, len(sql.Select))
@@ -70,19 +70,26 @@ func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
 			return err
 		}
 
-		v := reflect.Indirect(reflect.ValueOf(obj))
+		// Indexに合わせて拡張
+		if idx >= v.Cap() {
+			newv := reflect.MakeSlice(v.Type(), v.Len(), idx+1)
+			reflect.Copy(newv, v)
+			v.Set(newv)
+			v.SetCap(idx + 1)
+		}
+		if idx >= v.Len() {
+			v.SetLen(idx + 1)
+		}
+		vindex := v.Index(idx)
 
 		for i, column := range columns {
-			subv := v.Field(mapping[i])
+			subv := vi.Field(mapping[i])
 			str, _ := column.(*string)
 			subv.SetString(*str)
 		}
 
-		// TODO いい感じに配列で返す
-		fmt.Println(v)
-		// objs = append(objs, obj)
-
-		// TODO END いい感じに配列で返す
+		vindex.Set(vi)
+		idx++
 	}
 
 	return nil

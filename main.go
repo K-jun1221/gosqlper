@@ -14,22 +14,25 @@ type IEvent struct {
 func main() {
 	db.Initialize("hidakkathon:hidakkathon@tcp(127.0.0.1:3306)/sugori_rendez_vous")
 
-	// var obj IEvent
+	var obj IEvent
+	var objs []IEvent
 	sql := lib.SelectSQL{
 		Select: []string{"event_id", "event_name"},
 		From:   "i_event",
 	}
 
-	var obj IEvent
-	// var objs []interface{}
-	lib.QueryRow(db.DB, sql, &obj)
-	fmt.Println("obj event_id: ", obj.EventID)
-	fmt.Println("obj event_name: ", obj.EventName)
+	err := lib.QueryRow(db.DB, sql, &obj)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("obj: ", obj)
 
-	// err := lib.Query(db.DB, sql, &obj, objs)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	// TODO 使い終わったobjは削除
+	err = lib.Query(db.DB, sql, &obj, &objs)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	// fmt.Println("result: ", objs)
+	fmt.Println("obj: ", obj)
+	fmt.Println("objs: ", objs)
 }
