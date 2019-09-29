@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 
+	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )
 
