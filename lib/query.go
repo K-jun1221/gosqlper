@@ -3,7 +3,6 @@ package lib
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -122,33 +121,37 @@ func Query(db *sql.DB, sql SelectSQL, objs interface{}) error {
 	return nil
 }
 
+// Exec use InsertSQL, UpdateSQL, DeleteSQL, and SelectSQL
 func Exec(db *sql.DB, sql SQLStatement) (sql.Result, error) {
-	fmt.Println("Exec was called")
+
+	// get raw sql
 	rawSQL, err := sql.MakeSQL()
 	if err != nil {
 		return nil, err
 	}
+
+	// call exec
 	return db.Exec(rawSQL)
 }
 
 func tagCheck(columns []string, v reflect.Value) ([]int, error) {
-	idxMap := []int{}
+	tm := []int{}
 
 	t := v.Type()
 
 	for i := 0; i < len(columns); i++ {
-		idxMap = append(idxMap, -1)
+		tm = append(tm, -1)
 	}
 
 	for i, v := range columns {
 		for j := 0; i < t.NumField(); j++ {
 			if dbTag, ok := t.Field(j).Tag.Lookup("db"); ok {
-				if dbTag == v && idxMap[i] == -1 {
-					idxMap[i] = j
+				if dbTag == v && tm[i] == -1 {
+					tm[i] = j
 					break
 				}
 			}
 		}
 	}
-	return idxMap, nil
+	return tm, nil
 }
