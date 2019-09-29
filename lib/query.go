@@ -3,6 +3,7 @@ package lib
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -118,8 +119,16 @@ func Query(db *sql.DB, sql SelectSQL, objs interface{}) error {
 		}
 		idx++
 	}
-
 	return nil
+}
+
+func Exec(db *sql.DB, sql SQLStatement) (sql.Result, error) {
+	fmt.Println("Exec was called")
+	rawSQL, err := sql.MakeSQL()
+	if err != nil {
+		return nil, err
+	}
+	return db.Exec(rawSQL)
 }
 
 func tagCheck(columns []string, v reflect.Value) ([]int, error) {

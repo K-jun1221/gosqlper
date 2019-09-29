@@ -33,4 +33,15 @@ func main() {
 	}
 
 	fmt.Println("objs: ", objs)
+
+	sql2 := &lib.InsertSQL{
+		Into:   "i_event_tag (event_id, tag_id)",
+		Values: "(2, 3)",
+	}
+
+	_, err = lib.Exec(db.DB, sql2)
+	if err != nil {
+		fmt.Println("err: ", err)
+		return
+	}
 }
