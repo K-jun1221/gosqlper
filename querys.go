@@ -1,4 +1,4 @@
-package lib
+package gosqlper
 
 import (
 	"database/sql"
