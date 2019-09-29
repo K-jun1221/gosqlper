@@ -36,7 +36,7 @@ func main() {
 
 	sql2 := &lib.InsertSQL{
 		Into:   "i_event_tag (event_id, tag_id)",
-		Values: "(2, 3)",
+		Values: "(3, 3)",
 	}
 
 	_, err = lib.Exec(db.DB, sql2)
