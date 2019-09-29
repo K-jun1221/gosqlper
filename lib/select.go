@@ -2,6 +2,7 @@ package lib
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -9,15 +10,23 @@ import (
 
 // QueryRow only allowed string field
 func QueryRow(db *sql.DB, sql SelectSQL, obj interface{}) error {
-	mapping, err := tagCheck(sql.Select, obj)
+
+	// create reflect.Value
+	v := reflect.Indirect(reflect.ValueOf(obj))
+
+	// get tag mapping list
+	tm, err := tagCheck(sql.Select, v)
 	if err != nil {
 		return err
 	}
+
+	// get raw sql statement
 	rawSQL, err := sql.MakeSQL()
 	if err != nil {
 		return err
 	}
 
+	// call scan
 	columns := make([]interface{}, len(sql.Select))
 	for i := 0; i < len(sql.Select); i++ {
 		var str string
@@ -28,54 +37,71 @@ func QueryRow(db *sql.DB, sql SelectSQL, obj interface{}) error {
 		return err
 	}
 
-	v := reflect.Indirect(reflect.ValueOf(obj))
-
 	for i, column := range columns {
-		subv := v.Field(mapping[i])
-		str, _ := column.(*string)
+		subv := v.Field(tm[i])
+		str, ok := column.(*string)
+		if !ok {
+			return errors.New("could not cast interface{} to *string type")
+		}
 		subv.SetString(*str)
 	}
 
 	return nil
 }
 
-func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
+// Query only allowed string field
+func Query(db *sql.DB, sql SelectSQL, objs interface{}) error {
 
-	mapping, err := tagCheck(sql.Select, obj)
+	// create reflect.Value
+	v := reflect.Indirect(reflect.ValueOf(objs))
+	if 1 > v.Cap() {
+		newv := reflect.MakeSlice(v.Type(), v.Len(), 1)
+		reflect.Copy(newv, v)
+		v.Set(newv)
+	}
+	if 1 > v.Len() {
+		v.SetLen(1)
+	}
+	vi := v.Index(0)
+
+	// get tag mapping list
+	tm, err := tagCheck(sql.Select, vi)
 	if err != nil {
 		return err
 	}
+
+	// get raw sql statement
 	rawSQL, err := sql.MakeSQL()
 	if err != nil {
 		return err
 	}
 
-	v := reflect.Indirect(reflect.ValueOf(objs))
+	// call query
 	rows, err := db.Query(rawSQL)
 	if err != nil {
 		return err
 	}
 
 	idx := 0
-	vi := reflect.Indirect(reflect.ValueOf(obj))
-
 	for rows.Next() {
 		columns := make([]interface{}, len(sql.Select))
 		for i := 0; i < len(sql.Select); i++ {
 			var str string
 			columns[i] = &str
 		}
+
+		// call query
 		err = rows.Scan(columns...)
 		if err != nil {
 			return err
 		}
 
-		// Indexに合わせて拡張
+		// expand as index
 		if idx >= v.Cap() {
 			newv := reflect.MakeSlice(v.Type(), v.Len(), idx+1)
 			reflect.Copy(newv, v)
 			v.Set(newv)
-			v.SetCap(idx + 1)
+
 		}
 		if idx >= v.Len() {
 			v.SetLen(idx + 1)
@@ -83,22 +109,23 @@ func Query(db *sql.DB, sql SelectSQL, obj interface{}, objs interface{}) error {
 		vindex := v.Index(idx)
 
 		for i, column := range columns {
-			subv := vi.Field(mapping[i])
-			str, _ := column.(*string)
+			subv := vindex.Field(tm[i])
+			str, ok := column.(*string)
+			if !ok {
+				return errors.New("could not cast interface{} to *string type")
+			}
 			subv.SetString(*str)
 		}
-
-		vindex.Set(vi)
 		idx++
 	}
 
 	return nil
 }
 
-func tagCheck(columns []string, obj interface{}) ([]int, error) {
+func tagCheck(columns []string, v reflect.Value) ([]int, error) {
 	idxMap := []int{}
 
-	t := reflect.Indirect(reflect.ValueOf(obj)).Type()
+	t := v.Type()
 
 	for i := 0; i < len(columns); i++ {
 		idxMap = append(idxMap, -1)

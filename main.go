@@ -27,12 +27,10 @@ func main() {
 	}
 	fmt.Println("obj: ", obj)
 
-	// TODO 使い終わったobjは削除
-	err = lib.Query(db.DB, sql, &obj, &objs)
+	err = lib.Query(db.DB, sql, &objs)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("obj: ", obj)
 	fmt.Println("objs: ", objs)
 }
