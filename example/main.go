@@ -32,7 +32,6 @@ func main() {
 
 	fmt.Println(todo)
 
-
 	sql2 := "SELECT name, id, create_date, update_date FROM todo"
 
 	var todos []Todo

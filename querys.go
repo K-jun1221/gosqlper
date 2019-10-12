@@ -138,9 +138,9 @@ func columnGetter(sql string) ([]string, error) {
 	sidx := strings.Index(lowerSQL, "select ")
 	fidx := strings.Index(lowerSQL, " from ")
 	columns := strings.TrimSpace(lowerSQL[sidx+6 : fidx])
-	
+
 	c := strings.Split(columns, ",")
-	
+
 	for _, v := range c {
 		s = append(s, strings.TrimSpace(v))
 	}
@@ -167,7 +167,7 @@ func tagMappingGetter(columns []string, v reflect.Value) ([]int, error) {
 		}
 
 		if tm[i] == -1 {
-			return tm, errors.New("tag `" +v+"` is missing for mapping row columns")
+			return tm, errors.New("tag `" + v + "` is missing for mapping row columns")
 		}
 	}
 	return tm, nil
