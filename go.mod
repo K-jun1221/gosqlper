@@ -1,4 +1,4 @@
-module github.com/K-jun1221/gosqlper
+module github.com/k-jun/gosqlper
 
 go 1.12
 
